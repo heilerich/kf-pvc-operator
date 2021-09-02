@@ -1,0 +1,30 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: objecttemplate.nail.science
+spec:
+  scope: Namespaced
+  group: nail.science
+  names:
+    kind: ObjectTemplate
+    plural: objecttemplates
+    singular: objecttemplate
+    shortNames:
+      - obts
+      - obt
+  versions:
+    - name: v1alpha1
+      # TODO: do I need this?
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              # TODO: insert template field
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            status:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
