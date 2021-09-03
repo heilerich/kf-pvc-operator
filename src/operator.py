@@ -27,9 +27,12 @@ def login_fn(**kwargs):
 
 @kopf.on.startup()
 def startup_fn(memo, logger, **_):
-    if os.getenv('KUBECONFIG', default=None) is not None:
+    kubeconfig_path = os.getenv('KUBECONFIG', default=None)
+    if kubeconfig_path is not None:
+        logger.info(f"Auth: Using kube config {kubeconfig_path}")
         config = kubernetes.config.load_kube_config()
     else:
+        logger.info(f"Auth: Using incluster service account")
         config = kubernetes.config.load_incluster_config()
 
     memo.api_client = kubernetes.client.ApiClient(config)
