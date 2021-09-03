@@ -21,7 +21,8 @@ spec:
           image: ghcr.io/heilerich/kf-pvc-operator:development
           imagePullPolicy: Always
           env:
-            NAMESPACE_SELECTOR: ""
+            - name: NAMESPACE_SELECTOR
+              value: ""
           volumeMounts:
             - name: config
               mountPath: /templates
