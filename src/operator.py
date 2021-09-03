@@ -27,6 +27,13 @@ def login_fn(**kwargs):
 
 @kopf.on.startup()
 def startup_fn(memo, logger, **_):
+    if os.getenv('KUBECONFIG', default=None) is not None:
+        config = kubernetes.config.load_kube_config()
+    else:
+        config = kubernetes.config.load_incluster_config()
+
+    memo.api_client = kubernetes.client.ApiClient(config)
+
     ns_filter = dict()
     selector_str = os.getenv('NAMESPACE_SELECTOR', default=None)
     if selector_str is None:
@@ -56,7 +63,7 @@ def startup_fn(memo, logger, **_):
 
     memo.templates = templates
 
-    memo.resources = get_resource_types()
+    memo.resources = get_resource_types(memo.api_client)
 
 @kopf.timer('namespaces', when=namespace_filter, interval=10)
 def ensure_objects(name, memo, logger, **_):
@@ -110,9 +117,7 @@ def handle_pv_change(name, status, logger, **_):
     api.delete_persistent_volume(name)
     logger.info(f"Deleted released PV {name}")
 
-def get_resource_types():
-    config = kubernetes.config.load_config()
-    api_client = kubernetes.client.ApiClient(config)
+def get_resource_types(api_client):
     apis_api = kubernetes.client.ApisApi()
     group_list = apis_api.get_api_versions()
     apis = [(g.name, gv.version) for g in group_list.groups for gv in g.versions]
@@ -138,7 +143,7 @@ def extract_endpoint(body, memo, logger):
     if (group, version, kind) not in memo.resources:
         logger.info(f"Could not map kind '{kind}' ({group}/{version}) to resource endpoint."
                      "Refreshing endpoint list")
-        memo.resources = get_resource_types()
+        memo.resources = get_resource_types(memo.api_client)
         if (group, version, kind) not in memo.resources:
             logger.debug(f"Known resources {memo.resources}")
             raise Exception(f"Could not map kind '{kind}' ({group}/{version}) to resource endpoint.")
