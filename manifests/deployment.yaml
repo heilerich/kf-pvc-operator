@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kf-pvc-operator
+  namespace: kf-pvc-operator
+  labels:
+    app: kf-pvc-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kf-pvc-operator
+  template:
+    metadata:
+      labels:
+        app: kf-pvc-operator
+    spec:
+      serviceAccountName: kv-pvc-operator
+      containers:
+        - name: kf-pvc-operator
+          image: ghcr.io/heilerich/kf-pvc-operator:development
+          imagePullPolicy: Always
+          env:
+            NAMESPACE_SELECTOR: ""
+          volumeMounts:
+            - name: config
+              mountPath: /templates
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: kf-pvc-operator-templates
