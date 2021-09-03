@@ -5,6 +5,10 @@ metadata:
   name: kf-pvc-operator
   namespace: kf-pvc-operator
 rules:
+# Framework: posting the events about the handlers progress/errors.
+- apiGroups: [""]
+  resources: [events]
+  verbs: [create]
 # Framework: knowing which other operators are running (i.e. peering).
 - apiGroups: [kopf.dev]
   resources: [clusterkopfpeerings]
