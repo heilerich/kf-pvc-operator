@@ -30,12 +30,10 @@ def startup_fn(memo, logger, **_):
     kubeconfig_path = os.getenv('KUBECONFIG', default=None)
     if kubeconfig_path is not None:
         logger.info(f"Auth: Using kube config {kubeconfig_path}")
-        config = kubernetes.config.load_kube_config()
+        kubernetes.config.load_kube_config()
     else:
         logger.info(f"Auth: Using incluster service account")
-        config = kubernetes.config.load_incluster_config()
-
-    memo.api_client = kubernetes.client.ApiClient(config)
+        kubernetes.config.load_incluster_config()
 
     ns_filter = dict()
     selector_str = os.getenv('NAMESPACE_SELECTOR', default=None)
@@ -66,7 +64,7 @@ def startup_fn(memo, logger, **_):
 
     memo.templates = templates
 
-    memo.resources = get_resource_types(memo.api_client)
+    memo.resources = get_resource_types()
 
 @kopf.timer('namespaces', when=namespace_filter, interval=10)
 def ensure_objects(name, memo, logger, **_):
@@ -120,18 +118,22 @@ def handle_pv_change(name, status, logger, **_):
     api.delete_persistent_volume(name)
     logger.info(f"Deleted released PV {name}")
 
-def get_resource_types(api_client):
+def get_resource_types():
+    api_client = kubernetes.client.ApiClient()
+    auth = kubernetes.client.Configuration().get_default_copy().auth_settings()
     apis_api = kubernetes.client.ApisApi()
     group_list = apis_api.get_api_versions()
     apis = [(g.name, gv.version) for g in group_list.groups for gv in g.versions]
     resources = {(name, version, r.kind): r.name 
                  for name, version in apis
                  for r in api_client.call_api(f"/apis/{name}/{version}/", 'GET', 
+                                              auth_settings=auth,
                                               response_type=kubernetes.client.V1APIResourceList)[0]\
                                                       .resources if '/' not in r.name}
     resources.update({
         ('', 'v1', r.kind): r.name
         for r in api_client.call_api(f"/api/v1", 'GET', 
+            auth_settings=auth,
             response_type=kubernetes.client.V1APIResourceList)[0].resources if '/' not in r.name
     })
     return resources
@@ -156,6 +158,7 @@ def extract_endpoint(body, memo, logger):
     return dict(namespace=namespace, group=group, version=version, plural=plural)
 
 def api_function(method, body, endpoint):
+    auth = kubernetes.client.Configuration().get_default_copy().auth_settings()
     if endpoint['group'] == "":
         if method == 'get':
             api_client = kubernetes.client.ApiClient()
@@ -163,6 +166,7 @@ def api_function(method, body, endpoint):
                 return api_client.call_api(
                     "/api/v1/namespaces/{namespace}/{plural}/{name}".format(name=name, **endpoint),
                     'GET',
+                    auth_settings=auth,
                     response_type='object')[0]
             return getter
         else:
