@@ -2,8 +2,8 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kv-pvc-operator
-  namespace: kv-pvc-operator
+  name: kf-pvc-operator
+  namespace: kf-pvc-operator
 rules:
 # Framework: knowing which other operators are running (i.e. peering).
 - apiGroups: [kopf.dev]
@@ -20,19 +20,19 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: kv-pvc-operator
-  namespace: kv-pvc-operator
+  name: kf-pvc-operator
+  namespace: kf-pvc-operator
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kv-pvc-operator
-  namespace: kv-pvc-operator
+  name: kf-pvc-operator
+  namespace: kf-pvc-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kv-pvc-operator
+  name: kf-pvc-operator
 subjects:
 - kind: ServiceAccount
-  name: kv-pvc-operator
-  namespace: kv-pvc-operator
+  name: kf-pvc-operator
+  namespace: kf-pvc-operator

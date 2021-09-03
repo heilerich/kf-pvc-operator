@@ -15,7 +15,7 @@ spec:
       labels:
         app: kf-pvc-operator
     spec:
-      serviceAccountName: kv-pvc-operator
+      serviceAccountName: kf-pvc-operator
       containers:
         - name: kf-pvc-operator
           image: ghcr.io/heilerich/kf-pvc-operator:development
