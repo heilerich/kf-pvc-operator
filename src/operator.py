@@ -179,7 +179,7 @@ def api_function(method, body, endpoint):
     else:
         api = kubernetes.client.CustomObjectsApi()
         fn = getattr(api, f"{method}_namespaced_custom_object")
-        return functools.partianl(fn, **endpoint)
+        return functools.partial(fn, **endpoint)
 
 def patch_or_create(target_ns, desired_body, memo, logger):
     name = desired_body['metadata']['name']
