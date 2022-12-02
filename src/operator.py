@@ -99,6 +99,7 @@ def handle_pvc_creation(namespace, name, annotations, body, logger, **_):
       mountOptions:
         - noatime
         - nfsvers=3
+        - fsc
       claimRef:
         namespace: {namespace}
         name: {name}
